@@ -99,6 +99,54 @@ Earlier experiments ("v1 + caps", full and LoRA) are no longer recommended: on h
 | **v2 (new)** | helmet | 0.755 | 0.763 | 0.796 |
 |  | no_helmet | 0.596 | 0.641 | 0.606 |
 
+### Confusion matrices (confidence 0.25)
+
+Counts of boxes at confidence 0.25 (Ultralytics' standard confusion matrix, IoU 0.45). Rows are what the model said, columns are the truth. The **Nothing column** = boxes drawn where no head is labelled (false alarms; many are real heads the labels miss, see below). The **Nothing row** = labelled heads that got no box (misses). Overall precision / recall are pooled over both classes at this fixed confidence, unlike the per-class tables above, which use Ultralytics' best-balance confidence.
+
+**DeBoniz test (643 images)**
+
+| Model | Said \ Truth | helmet | no_helmet | Nothing | Precision | Recall |
+|---|---|---|---|---|---|---|
+| Start model | helmet | 220 | 18 | 83 | 0.618 | 0.603 |
+|  | no_helmet | 42 | 456 | 275 |  |  |
+|  | Nothing (missed) | 268 | 117 | - |  |  |
+| Fine-tuned v1 | helmet | 256 | 41 | 140 | 0.704 | 0.431 |
+|  | no_helmet | 2 | 227 | 20 |  |  |
+|  | Nothing (missed) | 272 | 323 | - |  |  |
+| **v2 (new)** | helmet | 504 | 6 | 44 | 0.923 | 0.946 |
+|  | no_helmet | 2 | 557 | 36 |  |  |
+|  | Nothing (missed) | 24 | 28 | - |  |  |
+
+**Our test (48 images)**
+
+| Model | Said \ Truth | helmet | no_helmet | Nothing | Precision | Recall |
+|---|---|---|---|---|---|---|
+| Start model | helmet | 21 | 0 | 20 | 0.432 | 0.933 |
+|  | no_helmet | 2 | 49 | 70 |  |  |
+|  | Nothing (missed) | 2 | 1 | - |  |  |
+| Fine-tuned v1 | helmet | 24 | 1 | 5 | 0.753 | 0.933 |
+|  | no_helmet | 1 | 46 | 16 |  |  |
+|  | Nothing (missed) | 0 | 3 | - |  |  |
+| **v2 (new)** | helmet | 22 | 1 | 2 | 0.772 | 0.947 |
+|  | no_helmet | 2 | 49 | 16 |  |  |
+|  | Nothing (missed) | 1 | 0 | - |  |  |
+
+**Our dev (147 images)**
+
+| Model | Said \ Truth | helmet | no_helmet | Nothing | Precision | Recall |
+|---|---|---|---|---|---|---|
+| Start model | helmet | 74 | 6 | 98 | 0.238 | 0.290 |
+|  | no_helmet | 61 | 61 | 267 |  |  |
+|  | Nothing (missed) | 203 | 61 | - |  |  |
+| Fine-tuned v1 | helmet | 280 | 6 | 75 | 0.749 | 0.764 |
+|  | no_helmet | 4 | 76 | 34 |  |  |
+|  | Nothing (missed) | 54 | 46 | - |  |  |
+| **v2 (new)** | helmet | 257 | 10 | 73 | 0.712 | 0.725 |
+|  | no_helmet | 2 | 81 | 52 |  |  |
+|  | Nothing (missed) | 79 | 37 | - |  |  |
+
+Pictures of the DeBoniz test matrices (each cell as a share of the true class): [start](images/cm_start_deb_test.png), [v1](images/cm_v1_deb_test.png), [v2](images/cm_v2_deb_test.png).
+
 ### Helmets worn on heads (DeBoniz val+test)
 
 584 held-out images with only helmet boxes, where CLIP says the helmet is on a person's head (682 boxes). Share of those boxes each model labels correctly as helmet at confidence 0.25. v2 was not measured on this set.
@@ -114,6 +162,7 @@ Earlier experiments ("v1 + caps", full and LoRA) are no longer recommended: on h
 
 - **The DeBoniz test set is held-out images, but v2 trained on the same dataset's training split.** Pictures from one source tend to resemble each other, and we did not check for near-duplicates between its train and test splits. Expect lower scores on photos from elsewhere. The start model and v1 never trained on it, so the comparison favours v2.
 - **v2 is slightly behind v1 on our own splits** (test mAP50 0.947 vs 0.965, dev 0.701 vs 0.771), and its boxes match our labelling less tightly (test mAP50-95 0.542 vs 0.692). v1 was trained on that labelling style, v2 mostly was not.
+- **"Nothing" false alarms are not all mistakes.** In our dev set many boxes the models draw sit on real heads the labels do not mark (we looked at 32 of 79 for v1), so dev precision is understated.
 - **Our test set is tiny** (48 images). Differences of about 0.02 are noise. Our dev set has incomplete labels, so its absolute numbers are low for every model.
 - **Known failures on real street photos.** On one informal street photo, v2 missed a rider in a headscarf with headphones and called a bareheaded rider "helmet" at low confidence (0.32). Headscarf and cap cases need more training data. v2 only trained for 3 epochs.
 - **No photos from web searches are shown here**; we do not own them.
