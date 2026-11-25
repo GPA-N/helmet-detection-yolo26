@@ -40,11 +40,13 @@ All numbers are on our own splits (below). **Precision (P)** = of the boxes draw
 
 ### Overall (mAP50 / mAP50-95)
 
+> **Do not read this table as proof that the fine-tuned models are better.** Test, Dev and Train are scored against **our own labelling style**. The start model was labelled differently (different box shapes), so its low Dev/Train scores mean it disagrees with our labels, not that it is bad. The Train row is data the fine-tuned models were trained on, so it is not a test at all. The Test set is only 48 images, mostly from one source. A fairer comparison on a different, untouched dataset is in the next section (when present).
+
 | Split | Start model (`helmet-26m`) | Fine-tuned v1 | v1 + caps (full fine-tune) | v1 + caps (LoRA) |
 |---|---|---|---|---|
 | Test (48 images) | 0.867 / 0.588 | 0.965 / 0.692 | 0.973 / 0.695 | 0.956 / 0.690 |
 | Dev (147 images) | 0.252 / 0.072 | 0.771 / 0.318 | 0.756 / 0.308 | 0.790 / 0.324 |
-| Train (868 images) | 0.253 / 0.087 | 0.977 / 0.624 | 0.977 / 0.623 | 0.970 / 0.616 |
+| Train (868 images; the models were trained on these, **not a test**) | 0.253 / 0.087 | 0.977 / 0.624 | 0.977 / 0.623 | 0.970 / 0.616 |
 
 ### Test set, per class
 
