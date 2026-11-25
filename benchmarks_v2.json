@@ -1,0 +1,176 @@
+{
+ "start": {
+  "deb_test": {
+   "map50": 0.616,
+   "map": 0.319,
+   "P": [
+    0.726,
+    0.64
+   ],
+   "R": [
+    0.414,
+    0.773
+   ],
+   "ap50": [
+    0.479,
+    0.752
+   ]
+  },
+  "our_test": {
+   "map50": 0.867,
+   "map": 0.588,
+   "P": [
+    0.942,
+    0.727
+   ],
+   "R": [
+    0.64,
+    0.88
+   ],
+   "ap50": [
+    0.846,
+    0.889
+   ]
+  },
+  "our_dev": {
+   "map50": 0.252,
+   "map": 0.072,
+   "P": [
+    0.528,
+    0.18
+   ],
+   "R": [
+    0.222,
+    0.477
+   ],
+   "ap50": [
+    0.232,
+    0.271
+   ]
+  }
+ },
+ "v1": {
+  "deb_test": {
+   "map50": 0.554,
+   "map": 0.297,
+   "P": [
+    0.561,
+    0.925
+   ],
+   "R": [
+    0.509,
+    0.425
+   ],
+   "ap50": [
+    0.542,
+    0.567
+   ]
+  },
+  "our_test": {
+   "map50": 0.965,
+   "map": 0.692,
+   "P": [
+    0.949,
+    0.952
+   ],
+   "R": [
+    0.96,
+    0.9
+   ],
+   "ap50": [
+    0.979,
+    0.951
+   ]
+  },
+  "our_dev": {
+   "map50": 0.771,
+   "map": 0.318,
+   "P": [
+    0.834,
+    0.743
+   ],
+   "R": [
+    0.8,
+    0.57
+   ],
+   "ap50": [
+    0.87,
+    0.673
+   ]
+  }
+ },
+ "stock": {
+  "deb_test": {
+   "map50": 0.97,
+   "map": 0.706,
+   "P": [
+    0.941,
+    0.948
+   ],
+   "R": [
+    0.94,
+    0.936
+   ],
+   "ap50": [
+    0.981,
+    0.959
+   ]
+  },
+  "our_test": {
+   "map50": 0.947,
+   "map": 0.542,
+   "P": [
+    0.96,
+    0.887
+   ],
+   "R": [
+    0.88,
+    0.946
+   ],
+   "ap50": [
+    0.937,
+    0.957
+   ]
+  },
+  "our_dev": {
+   "map50": 0.701,
+   "map": 0.289,
+   "P": [
+    0.755,
+    0.596
+   ],
+   "R": [
+    0.763,
+    0.641
+   ],
+   "ap50": [
+    0.796,
+    0.606
+   ]
+  }
+ },
+ "_note": "Ultralytics val at conf 0.001, imgsz 640. Per-class lists are [helmet, no_helmet]. deb_test = DeBoniz test split (643 images; same dataset the v2 model trained on, held-out images). our_test/our_dev = our own splits. Measured 2026-11-25 on a Colab T4.",
+ "helmet_heads_deboniz_val_test": {
+  "note": "584 DeBoniz val+test images with only helmet boxes where CLIP says the person wears the helmet on their head (682 boxes); fraction of boxes matched (IoU>0.3, conf .25) with each class. v2 not measured on this set.",
+  "start": {
+   "helmet": 0.654,
+   "no_helmet": 0.11,
+   "missed": 0.236
+  },
+  "v1": {
+   "helmet": 0.603,
+   "no_helmet": 0.009,
+   "missed": 0.389
+  },
+  "v1_caps_full": {
+   "helmet": 0.409,
+   "no_helmet": 0.362,
+   "missed": 0.229
+  },
+  "v1_caps_lora": {
+   "helmet": 0.348,
+   "no_helmet": 0.381,
+   "missed": 0.271
+  }
+ }
+}

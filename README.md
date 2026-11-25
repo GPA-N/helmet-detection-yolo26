@@ -2,17 +2,33 @@
 
 A small object detector (YOLO26m) that draws a box around a person's head and says whether they are wearing a **helmet** (green) or **no helmet** (red).
 
-It started from the public model [`leeyunjai/yolo26-helmet`](https://huggingface.co/leeyunjai/yolo26-helmet) and was fine-tuned on riders from Indian and Southeast-Asian roads. This repo is the write-up: results, how it was trained, example outputs and the scripts. **The fine-tuned weights are on the [Releases page](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v1.0)** (see [Weights](#weights) for the licence caveat).
+**Latest: v2.** It starts from the public model [`leeyunjai/yolo26-helmet`](https://huggingface.co/leeyunjai/yolo26-helmet) and is fine-tuned with the **plain Ultralytics trainer at its default settings**, no custom training code. Weights are on the [v2.0 release](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v2.0).
+
+## Results at a glance
+
+mAP50 (higher is better, 1.0 is perfect):
+
+| Test set | Start model | Fine-tuned v1 | **v2 (new)** |
+|---|---|---|---|
+| DeBoniz test (643 images) | 0.616 | 0.554 | **0.970** |
+| Our test (48 images) | 0.867 | **0.965** | 0.947 |
+| Our dev (147 images) | 0.252 | **0.771** | 0.701 |
+
+v2 is far better on the large DeBoniz test set. It is slightly behind v1 on our two small sets, which use our own labelling style. See [what these numbers do and do not show](#read-these-numbers-carefully).
 
 ## Example outputs
 
-Each row shows the same photo through three models: the start model, our fine-tuned v1 and v1 + caps (LoRA). Green = helmet, red = no_helmet.
-
-We took 13 evenly spaced images (every 50th) from the DeBoniz test split (licence CC-BY-4.0) and show 7 of them. We left out 2 where no model drew any box and 4 that were near-repeats (screenshots with overlay text) or tiny street scenes. Most of that split is close-ups and product photos, not street scenes, so it is a harsh test. It also shows the weak spots of the newest model, which sometimes calls a helmeted close-up "no_helmet" (rows 1, 3, 5 and 6).
+Each row is the same photo through the start model, v1 and v2 (confidence 0.25). Green = helmet, red = no_helmet. These are **all 13 images** from taking every 50th image of the DeBoniz test split (licence CC-BY-4.0), nothing skipped. Many are close-ups and product photos, not street scenes.
 
 ![example 01](images/example_01.jpg)
 
+![example 02](images/example_02.jpg)
+
+![example 03](images/example_03.jpg)
+
 ![example 04](images/example_04.jpg)
+
+![example 05](images/example_05.jpg)
 
 ![example 06](images/example_06.jpg)
 
@@ -22,135 +38,133 @@ We took 13 evenly spaced images (every 50th) from the DeBoniz test split (licenc
 
 ![example 09](images/example_09.jpg)
 
+![example 10](images/example_10.jpg)
+
+![example 11](images/example_11.jpg)
+
+![example 12](images/example_12.jpg)
+
 ![example 13](images/example_13.jpg)
 
-## The models compared
+## The models
 
 | Name | What it is |
 |---|---|
-| Base YOLO26m (COCO) | The general-purpose pretrained YOLO26m. It knows 80 everyday object types and has **no helmet class**, so it cannot do this task and has no score here. |
-| Start model | `helmet-26m` from `leeyunjai/yolo26-helmet`. The one we started from. |
-| Fine-tuned v1 | Start model, all weights fine-tuned for 40 epochs on our rider data. |
-| v1 + caps (full fine-tune) | v1, fine-tuned again with photos of people in caps, hats and headscarves labelled no_helmet. Changes every weight. |
-| v1 + caps (LoRA) | Same extra photos, but only small add-on layers are trained, so the original weights stay put. Also mixes in the old model's own predictions so it does not forget. **Experimental, not recommended as the default:** it over-calls no_helmet on helmeted close-ups (see the examples). A fixed version is being trained. |
+| Start model | `helmet-26m` from `leeyunjai/yolo26-helmet`. Where everything starts. |
+| Fine-tuned v1 | Start model, all weights trained 40 epochs on our own 868 rider images. |
+| **v2 (new)** | Start model, all weights trained with default Ultralytics settings on the 16,384-image DeBoniz training set plus our 868 images, for a 30-minute budget (3 epochs). |
+
+Earlier experiments ("v1 + caps", full and LoRA) are no longer recommended: on held-out DeBoniz photos of helmets worn on heads they called the helmet correctly less often than the start model (see below). Their files stay on the [v1.0 release](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v1.0).
 
 ## Benchmarks
 
-All numbers are on our own splits (below). **Precision (P)** = of the boxes drawn, how many were right. **Recall (R)** = of the real heads, how many were found. **AP50 / AP50-95** = how good the boxes and their confidence are (higher is better, 1.0 is perfect). **mAP** = the average over the two classes. P and R are at the confidence level that gives the best balance (Ultralytics' standard report).
+**P** = of the boxes drawn, how many were right. **R** = of the real heads, how many were found. **AP50** = box quality and confidence ranking at IoU 0.5. P and R are at the confidence with the best balance (Ultralytics' standard report). mAP50 / mAP50-95:
 
-### Overall (mAP50 / mAP50-95)
-
-> **Do not read this table as proof that the fine-tuned models are better.** Test, Dev and Train are scored against **our own labelling style**. The start model was labelled differently (different box shapes), so its low Dev/Train scores mean it disagrees with our labels, not that it is bad. The Train row is data the fine-tuned models were trained on, so it is not a test at all. The Test set is only 48 images, mostly from one source. A fairer comparison on a different, untouched dataset is in the next section (when present).
-
-| Split | Start model (`helmet-26m`) | Fine-tuned v1 | v1 + caps (full fine-tune) | v1 + caps (LoRA) |
-|---|---|---|---|---|
-| Test (48 images) | 0.867 / 0.588 | 0.965 / 0.692 | 0.973 / 0.695 | 0.956 / 0.690 |
-| Dev (147 images) | 0.252 / 0.072 | 0.771 / 0.318 | 0.756 / 0.308 | 0.790 / 0.324 |
-| Train (868 images; the models were trained on these, **not a test**) | 0.253 / 0.087 | 0.977 / 0.624 | 0.977 / 0.623 | 0.970 / 0.616 |
-
-### Test set, per class
-
-| Model | Class | P | R | AP50 | AP50-95 |
-|---|---|---|---|---|---|
-| Start model (`helmet-26m`) | helmet | 0.942 | 0.640 | 0.846 | 0.553 |
-|  | no_helmet | 0.727 | 0.880 | 0.889 | 0.624 |
-| Fine-tuned v1 | helmet | 0.949 | 0.960 | 0.979 | 0.741 |
-|  | no_helmet | 0.952 | 0.900 | 0.951 | 0.643 |
-| v1 + caps (full fine-tune) | helmet | 0.986 | 0.920 | 0.980 | 0.749 |
-|  | no_helmet | 0.956 | 0.878 | 0.966 | 0.642 |
-| v1 + caps (LoRA) | helmet | 1.000 | 0.872 | 0.982 | 0.736 |
-|  | no_helmet | 0.897 | 0.880 | 0.929 | 0.644 |
-
-### Dev set, per class
-
-| Model | Class | P | R | AP50 | AP50-95 |
-|---|---|---|---|---|---|
-| Start model (`helmet-26m`) | helmet | 0.528 | 0.222 | 0.232 | 0.078 |
-|  | no_helmet | 0.180 | 0.477 | 0.271 | 0.067 |
-| Fine-tuned v1 | helmet | 0.834 | 0.800 | 0.870 | 0.392 |
-|  | no_helmet | 0.743 | 0.570 | 0.673 | 0.243 |
-| v1 + caps (full fine-tune) | helmet | 0.838 | 0.808 | 0.862 | 0.386 |
-|  | no_helmet | 0.743 | 0.586 | 0.649 | 0.229 |
-| v1 + caps (LoRA) | helmet | 0.826 | 0.802 | 0.872 | 0.393 |
-|  | no_helmet | 0.716 | 0.625 | 0.707 | 0.254 |
-
-### People in caps and hats, and forgetting
-
-120 held-out photos from the DeBoniz dataset where the person wears a cap, hat or headscarf (correct answer: no_helmet). The last column is how much of v1's old behaviour is kept: the share of v1's confident detections on 200 unlabelled street photos that the model still reproduces (1.0 = nothing forgotten).
-
-| Model | Called no_helmet (correct) | Called helmet (wrong) | Old behaviour kept |
+| Split | Start model | Fine-tuned v1 | v2 (new) |
 |---|---|---|---|
-| Start model (`helmet-26m`) | 71% | 28% | 0.63 |
-| Fine-tuned v1 | 38% | 38% | 1.000 |
-| v1 + caps (full fine-tune) | 95% | 4% | 0.935 |
-| v1 + caps (LoRA) | 93% | 4% | 0.944 |
+| DeBoniz test (643 images) | 0.616 / 0.319 | 0.554 / 0.297 | **0.970 / 0.706** |
+| Our test (48 images) | 0.867 / 0.588 | **0.965 / 0.692** | 0.947 / 0.542 |
+| Our dev (147 images) | 0.252 / 0.072 | **0.771 / 0.318** | 0.701 / 0.289 |
 
-(Start-model "old behaviour kept" is measured the same way against v1.)
+### DeBoniz test, per class
+
+| Model | Class | P | R | AP50 |
+|---|---|---|---|---|
+| Start model | helmet | 0.726 | 0.414 | 0.479 |
+|  | no_helmet | 0.640 | 0.773 | 0.752 |
+| Fine-tuned v1 | helmet | 0.561 | 0.509 | 0.542 |
+|  | no_helmet | 0.925 | 0.425 | 0.567 |
+| **v2 (new)** | helmet | 0.941 | 0.940 | 0.981 |
+|  | no_helmet | 0.948 | 0.936 | 0.959 |
+
+### Our test, per class
+
+| Model | Class | P | R | AP50 |
+|---|---|---|---|---|
+| Start model | helmet | 0.942 | 0.640 | 0.846 |
+|  | no_helmet | 0.727 | 0.880 | 0.889 |
+| Fine-tuned v1 | helmet | 0.949 | 0.960 | 0.979 |
+|  | no_helmet | 0.952 | 0.900 | 0.951 |
+| **v2 (new)** | helmet | 0.960 | 0.880 | 0.937 |
+|  | no_helmet | 0.887 | 0.946 | 0.957 |
+
+### Our dev, per class
+
+| Model | Class | P | R | AP50 |
+|---|---|---|---|---|
+| Start model | helmet | 0.528 | 0.222 | 0.232 |
+|  | no_helmet | 0.180 | 0.477 | 0.271 |
+| Fine-tuned v1 | helmet | 0.834 | 0.800 | 0.870 |
+|  | no_helmet | 0.743 | 0.570 | 0.673 |
+| **v2 (new)** | helmet | 0.755 | 0.763 | 0.796 |
+|  | no_helmet | 0.596 | 0.641 | 0.606 |
+
+### Helmets worn on heads (DeBoniz val+test)
+
+584 held-out images with only helmet boxes, where CLIP says the helmet is on a person's head (682 boxes). Share of those boxes each model labels correctly as helmet at confidence 0.25. v2 was not measured on this set.
+
+| Model | Called helmet (correct) | Called no_helmet (wrong) | Missed |
+|---|---|---|---|
+| Start model | 65% | 11% | 24% |
+| Fine-tuned v1 | 60% | 1% | 39% |
+| v1 + caps (full fine-tune) | 41% | 36% | 23% |
+| v1 + caps (LoRA) | 35% | 38% | 27% |
 
 ### Read these numbers carefully
 
-- **The test set is tiny**: 48 images, 25 helmet and 50 no_helmet boxes. Differences of about 0.01 (for example 0.965 vs 0.973) are noise. Treat the test numbers as a rough guide only. They were also looked at several times while making choices.
-- **The dev set has incomplete labels.** On v1, only 10 of 466 labelled heads got the wrong class. 78 had no detection at all (mostly tiny or blurry heads), and 79 detections sat where there is no label at all. Of 32 of those we looked at, most were real heads or helmets that the labels simply do not mark. So dev scores of 0.6 to 0.8 are partly the labels' fault, not only the model's.
-- **Train vs dev gap.** v1 scores 0.977 on training images, 0.771 on dev and 0.965 on test. Some of that train-to-dev gap is overfitting to the training photos and some is the label problem above. We have not separated the two.
-- **The cap photos come from the same source** as the extra training photos, so the 93-95% is optimistic for photos from elsewhere.
-- **The start model scores low on train and dev** (0.25) partly because it draws its boxes differently from our labels, and then well on the test set (0.867), whose labelling style it matches better.
-- **Trade-off, not a free win.** The caps versions fix most cap/hat mistakes, but the LoRA one loses some helmet recall (test helmet recall 0.960 to 0.872) and over-calls no_helmet on helmeted close-ups. The full fine-tune forgets more of v1's behaviour (0.935 kept vs 0.944).
+- **The DeBoniz test set is held-out images, but v2 trained on the same dataset's training split.** Pictures from one source tend to resemble each other, and we did not check for near-duplicates between its train and test splits. Expect lower scores on photos from elsewhere. The start model and v1 never trained on it, so the comparison favours v2.
+- **v2 is slightly behind v1 on our own splits** (test mAP50 0.947 vs 0.965, dev 0.701 vs 0.771), and its boxes match our labelling less tightly (test mAP50-95 0.542 vs 0.692). v1 was trained on that labelling style, v2 mostly was not.
+- **Our test set is tiny** (48 images). Differences of about 0.02 are noise. Our dev set has incomplete labels, so its absolute numbers are low for every model.
+- **Known failures on real street photos.** On one informal street photo, v2 missed a rider in a headscarf with headphones and called a bareheaded rider "helmet" at low confidence (0.32). Headscarf and cap cases need more training data. v2 only trained for 3 epochs.
+- **No photos from web searches are shown here**; we do not own them.
 
 ## How it was trained
 
 Everything ran on a free Google Colab T4 GPU.
 
-1. **Data.** Two public rider datasets, converted to head-level boxes with two classes (`helmet`, `no_helmet`); number-plate and whole-rider boxes were dropped. 868 training images (2,121 helmet and 899 no_helmet boxes), 147 dev images, 48 test images and 400 unlabelled street photos used only to check forgetting. Images were grouped into clusters of near-identical pictures and split by cluster, so no near-duplicate sits on both sides of a split.
-2. **Fine-tuned v1.** Start model, **all weights** trained for 40 epochs with Ultralytics' default settings (640 px images, batch 16, automatic AdamW).
-3. **Finding caps and hats.** None of our data labels caps, hats or headscarves as such, so we used OpenAI's CLIP (zero-shot: "a person wearing a baseball cap", and so on) to pick them out of the no_helmet boxes of the DeBoniz dataset. Picks were checked by eye on photo grids (mostly correct, some bare faces slip in). Those images all keep the label no_helmet.
-4. **Caps, full fine-tune.** v1 trained 15 more epochs on our images plus 400 cap images. Changes every weight.
-5. **Caps, LoRA.** The original weights and normalisation layers are frozen. Small rank-8 add-on layers (4.3% extra parameters) are put on 122 convolution layers and trained for 15 epochs on our images, 900 cap images and 200 "replay" photos labelled by v1 itself (so the model keeps doing what it used to). The add-ons are then folded back into an ordinary model with no change to its shape.
+1. **v1.** Start model, all weights, 40 epochs on our 868 rider images (Ultralytics defaults: 640 px, batch 16, automatic optimizer).
+2. **v2.** `YOLO('helmet-26m.pt').train(data=..., time=0.5)`, nothing else changed. Training data = DeBoniz train (16,384 images, 2 classes: helmet / no_helmet) + our 868 train images. `time=0.5` is Ultralytics' own time budget in hours; it ran 3 epochs. Validation during training used the DeBoniz val split. The final `last.pt` is the released model.
+
+The recipe is [`scripts/train_v2.py`](scripts/train_v2.py) and the evaluation is [`scripts/eval_v2.py`](scripts/eval_v2.py).
 
 ## What did not work
 
-Before fine-tuning again, we tried to fix the cap mistake by **editing a handful of weights directly without any training** ("weight-space programming"). Four different kinds of edit, each checked against random edits of the same size, were no better than chance or cost accuracy elsewhere. The model's features for a cap and a helmet are too similar for a few-weight edit to separate them, so we fine-tuned instead.
+- **Editing a few weights without training** ("weight-space programming") to fix cap/hat mistakes: four kinds of edit, each no better than random edits of the same size.
+- **Our own LoRA and replay fine-tunes** ("v1 + caps"): they fixed some cap photos but made helmets worse on held-out DeBoniz images (table above), and over-called no_helmet on helmeted close-ups. We stopped using them.
+- **Blending a share of the start model back in** (weight interpolation, as suggested in [arXiv 2609.36426](https://arxiv.org/abs/2609.36426)) helped those models a little but did not bring them back to the start model.
 
 ## Data and credits
 
 | Source | Used for | Licence (as listed by the host) |
 |---|---|---|
-| [aneesarom/rider-with-helmet-without-helmet-number-plate](https://www.kaggle.com/datasets/aneesarom/rider-with-helmet-without-helmet-number-plate) (Kaggle) | train, test | Apache-2.0 |
-| [aryanvaid13/indian-helmet-detection-dataset](https://www.kaggle.com/datasets/aryanvaid13/indian-helmet-detection-dataset) (Kaggle) | train, dev | "unknown" on Kaggle |
-| devgurucodes/trafffic-violations-triple-riding-no-helmet-plate, pkdarabi/helmet (Kaggle) | unlabelled street photos for the forgetting check only | see each page |
-| [DeBoniz/helmet-detection-dataset](https://huggingface.co/datasets/DeBoniz/helmet-detection-dataset) (Hugging Face) | cap/hat photos for training; held-out cap test; example images | CC-BY-4.0 |
+| [DeBoniz/helmet-detection-dataset](https://huggingface.co/datasets/DeBoniz/helmet-detection-dataset) (Hugging Face) | v2 training, DeBoniz test, example images | CC-BY-4.0 |
+| [aneesarom/rider-with-helmet-without-helmet-number-plate](https://www.kaggle.com/datasets/aneesarom/rider-with-helmet-without-helmet-number-plate) (Kaggle) | our train, test | Apache-2.0 |
+| [aryanvaid13/indian-helmet-detection-dataset](https://www.kaggle.com/datasets/aryanvaid13/indian-helmet-detection-dataset) (Kaggle) | our train, dev | "unknown" on Kaggle |
 | [leeyunjai/yolo26-helmet](https://huggingface.co/leeyunjai/yolo26-helmet) | start model | none stated |
-| [openai/clip-vit-base-patch32](https://huggingface.co/openai/clip-vit-base-patch32) | finding caps and hats | MIT |
+| [openai/clip-vit-base-patch32](https://huggingface.co/openai/clip-vit-base-patch32) | finding head-worn helmets in the analysis above | MIT |
 
 Built with [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) (AGPL-3.0). Check each dataset's terms before reusing its images.
 
 ## Weights
 
-Download from the [v1.0 release](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v1.0). Each file is a normal Ultralytics model (`YOLO('file.pt')`); class 0 = helmet, class 1 = no_helmet.
+[v2.0 release](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v2.0): `helmet-v2.pt`, a normal Ultralytics model (`YOLO('helmet-v2.pt')`); class 0 = helmet, class 1 = no_helmet. Older models are on [v1.0](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v1.0).
 
-| File | Model |
-|---|---|
-| `helmet-v1-finetune.pt` | Fine-tuned v1 |
-| `helmet-v1-caps-full.pt` | v1 + caps (full fine-tune) |
-| `helmet-v1-caps-lora.pt` | v1 + caps (LoRA). **Experimental: misses helmets on close-ups. Prefer the other two for now.** |
-
-**Licence caveat:** these were fine-tuned from `leeyunjai/yolo26-helmet`, which states no licence, and Ultralytics code is AGPL-3.0. The weights are shared as-is, with no warranty, and may be taken down if the start model's author objects. The start model itself is not included: get it from its Hugging Face page.
+**Licence caveat:** fine-tuned from `leeyunjai/yolo26-helmet` (no licence stated) with AGPL-3.0 Ultralytics code. Weights are shared as-is, with no warranty, and may be taken down if the start model's author objects. The start model itself is not included.
 
 ## Not included
-- **Datasets and the source images behind the numbers.** Download them from the links above.
-- **Photos from web searches** that were used for informal spot checks. We do not own them.
+- Datasets and the source images behind the numbers. Download them from the links above.
 
 ## Scripts and raw results
 
 | File | What it does |
 |---|---|
-| [`benchmarks.json`](benchmarks.json) | Every number in the tables above |
-| [`scripts/build_dataset.py`](scripts/build_dataset.py) | Builds the train/dev/test/unlabelled splits |
-| [`scripts/lora_exp.py`](scripts/lora_exp.py) | CLIP cap mining, LoRA training, merging and evaluation |
-| [`scripts/bench_gh.py`](scripts/bench_gh.py) | The benchmark behind the tables |
-| [`scripts/render_gh.py`](scripts/render_gh.py) | Draws the example images |
-| [`scripts/kit.py`](scripts/kit.py), [`scripts/setup_all.py`](scripts/setup_all.py) | Helpers and Colab setup |
+| [`benchmarks_v2.json`](benchmarks_v2.json) | Every v2 number above |
+| [`benchmarks.json`](benchmarks.json) | Older benchmark of v1 and the "caps" models |
+| [`scripts/train_v2.py`](scripts/train_v2.py), [`scripts/eval_v2.py`](scripts/eval_v2.py) | v2 training and evaluation |
+| [`scripts/build_dataset.py`](scripts/build_dataset.py), [`scripts/kit.py`](scripts/kit.py), [`scripts/setup_all.py`](scripts/setup_all.py) | Our train/dev/test splits and Colab setup |
+| [`scripts/lora_exp.py`](scripts/lora_exp.py), [`scripts/bench_gh.py`](scripts/bench_gh.py), [`scripts/render_gh.py`](scripts/render_gh.py) | Earlier LoRA/caps experiments and the old examples |
 
-The scripts were written for Colab (paths start with `/content`). They are provided as a record, not a polished package.
+Scripts were written for Colab (paths start with `/content`). They are a record, not a polished package.
 
 ## Licence
 
