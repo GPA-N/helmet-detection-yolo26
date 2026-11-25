@@ -2,7 +2,7 @@
 
 A small object detector (YOLO26m) that draws a box around a person's head and says whether they are wearing a **helmet** (green) or **no helmet** (red).
 
-It started from the public model [`leeyunjai/yolo26-helmet`](https://huggingface.co/leeyunjai/yolo26-helmet) and was fine-tuned on riders from Indian and Southeast-Asian roads. This repo is the write-up: results, how it was trained, example outputs and the scripts. **The model weights are not included** (see [Not included](#not-included)).
+It started from the public model [`leeyunjai/yolo26-helmet`](https://huggingface.co/leeyunjai/yolo26-helmet) and was fine-tuned on riders from Indian and Southeast-Asian roads. This repo is the write-up: results, how it was trained, example outputs and the scripts. **The fine-tuned weights are on the [Releases page](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v1.0)** (see [Weights](#weights) for the licence caveat).
 
 ## Example outputs
 
@@ -121,10 +121,20 @@ Before fine-tuning again, we tried to fix the cap mistake by **editing a handful
 
 Built with [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) (AGPL-3.0). Check each dataset's terms before reusing its images.
 
-## Not included
+## Weights
 
-- **Model weights.** The start model has no licence stated, so we do not redistribute it or models derived from it. To reproduce, download the start model from its Hugging Face page and run the scripts.
-- **Datasets and the numbers' source images.** Download them from the links above.
+Download from the [v1.0 release](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v1.0). Each file is a normal Ultralytics model (`YOLO('file.pt')`); class 0 = helmet, class 1 = no_helmet.
+
+| File | Model |
+|---|---|
+| `helmet-v1-finetune.pt` | Fine-tuned v1 |
+| `helmet-v1-caps-full.pt` | v1 + caps (full fine-tune) |
+| `helmet-v1-caps-lora.pt` | v1 + caps (LoRA) |
+
+**Licence caveat:** these were fine-tuned from `leeyunjai/yolo26-helmet`, which states no licence, and Ultralytics code is AGPL-3.0. The weights are shared as-is, with no warranty, and may be taken down if the start model's author objects. The start model itself is not included: get it from its Hugging Face page.
+
+## Not included
+- **Datasets and the source images behind the numbers.** Download them from the links above.
 - **Photos from web searches** that were used for informal spot checks. We do not own them.
 
 ## Scripts and raw results
