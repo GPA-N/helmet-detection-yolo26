@@ -2,7 +2,7 @@
 
 A small object detector (YOLO26m) that draws a box around a person's head and says whether they are wearing a **helmet** (green) or **no helmet** (red).
 
-**Latest: v2.** It starts from the public model [`leeyunjai/yolo26-helmet`](https://huggingface.co/leeyunjai/yolo26-helmet) and is fine-tuned with the **plain Ultralytics trainer at its default settings**, no custom training code. Weights are on the [v2.0 release](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v2.0).
+**Latest: v2.** It starts from the public model [`leeyunjai/yolo26-helmet`](https://huggingface.co/leeyunjai/yolo26-helmet) and is fine-tuned with the **plain Ultralytics trainer at its default settings**, no custom training code. Weights are on the [v2.0 release](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v2.0); [how to run it](#use-it-inference) is below.
 
 ## Results at a glance
 
@@ -15,6 +15,43 @@ mAP50 (higher is better, 1.0 is perfect):
 | Our dev (147 images) | 0.252 | **0.771** | 0.701 |
 
 v2 is far better on the large DeBoniz test set. It is slightly behind v1 on our two small sets, which use our own labelling style. See [what these numbers do and do not show](#read-these-numbers-carefully).
+
+## Use it (inference)
+
+Install Ultralytics and download `helmet-v2.pt` from the [v2.0 release](https://github.com/GPA-N/helmet-detection-yolo26/releases/tag/v2.0):
+
+```bash
+pip install ultralytics
+curl -L -o helmet-v2.pt https://github.com/GPA-N/helmet-detection-yolo26/releases/download/v2.0/helmet-v2.pt
+```
+
+Python:
+
+```python
+from ultralytics import YOLO
+
+model = YOLO("helmet-v2.pt")
+results = model.predict("photo.jpg", conf=0.25)   # also accepts a folder, a video file or a webcam index
+
+for r in results:
+    for box in r.boxes:
+        label = r.names[int(box.cls)]              # "helmet" or "no_helmet"
+        print(label, float(box.conf), box.xyxy[0].tolist())   # confidence and [x1, y1, x2, y2] in pixels
+    r.save("photo_out.jpg")                        # photo with the boxes drawn
+```
+
+Or from the command line (annotated output goes to `runs/detect/predict`):
+
+```bash
+yolo predict model=helmet-v2.pt source=photo.jpg conf=0.25
+```
+
+Things to know:
+- **Output:** one box per head, class 0 = `helmet` (green in our pictures), class 1 = `no_helmet` (red). It finds heads, not whole riders, and it does not check whether the person is on a motorcycle.
+- **Confidence (`conf`):** 0.25 is the Ultralytics default and what every number and picture in this README uses (the confusion matrices are at 0.25). Raise it (for example 0.5) for fewer false alarms and more misses, lower it for the opposite.
+- **Image size:** 640 px by default. Very small or far-away heads are often missed.
+- **Speed:** during validation on a Colab T4 GPU (batch of 16, 640 px) the model took about 10.6 ms per image for the network step (inference only), plus about 2 ms of post-processing. We did not time CPU, other GPUs or video pipelines.
+- **Not a safety or enforcement tool.** It makes mistakes (see the failures above), so treat its output as a hint to be checked, not a verdict about a person.
 
 ## Example outputs
 
