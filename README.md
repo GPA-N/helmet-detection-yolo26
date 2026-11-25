@@ -184,6 +184,40 @@ Counts of boxes at confidence 0.25 (Ultralytics' standard confusion matrix, IoU 
 
 Pictures of the DeBoniz test matrices (each cell as a share of the true class): [start](images/cm_start_deb_test.png), [v1](images/cm_v1_deb_test.png), [v2](images/cm_v2_deb_test.png).
 
+### TP, FP, FN and F1 (confidence 0.25)
+
+From the matrices above. For a class: **TP** = boxes of that class that match a real head of that class; **FP** = boxes of that class that do not (wrong class or no real head there); **FN** = real heads of that class with no matching box of that class (missed or labelled as the other class). **F1** = 2 x P x R / (P + R). There is no TN count: in detection there is no fixed set of "correctly empty" regions to count.
+
+| Set | Model | Class | TP | FP | FN | Precision | Recall | F1 |
+|---|---|---|---|---|---|---|---|---|
+| DeBoniz test | Start model | helmet | 220 | 101 | 310 | 0.685 | 0.415 | 0.517 |
+|  |  | no_helmet | 456 | 317 | 135 | 0.590 | 0.772 | 0.669 |
+|  |  | both (pooled) | 676 | 418 | 445 | 0.618 | 0.603 | 0.610 |
+|  | Fine-tuned v1 | helmet | 256 | 181 | 274 | 0.586 | 0.483 | 0.529 |
+|  |  | no_helmet | 227 | 22 | 364 | 0.912 | 0.384 | 0.540 |
+|  |  | both (pooled) | 483 | 203 | 638 | 0.704 | 0.431 | 0.535 |
+|  | **v2 (new)** | helmet | 504 | 50 | 26 | 0.910 | 0.951 | 0.930 |
+|  |  | no_helmet | 557 | 38 | 34 | 0.936 | 0.942 | 0.939 |
+|  |  | both (pooled) | 1061 | 88 | 60 | 0.923 | 0.946 | 0.935 |
+| Our test | Start model | helmet | 21 | 20 | 4 | 0.512 | 0.840 | 0.636 |
+|  |  | no_helmet | 49 | 72 | 1 | 0.405 | 0.980 | 0.573 |
+|  |  | both (pooled) | 70 | 92 | 5 | 0.432 | 0.933 | 0.591 |
+|  | Fine-tuned v1 | helmet | 24 | 6 | 1 | 0.800 | 0.960 | 0.873 |
+|  |  | no_helmet | 46 | 17 | 4 | 0.730 | 0.920 | 0.814 |
+|  |  | both (pooled) | 70 | 23 | 5 | 0.753 | 0.933 | 0.833 |
+|  | **v2 (new)** | helmet | 22 | 3 | 3 | 0.880 | 0.880 | 0.880 |
+|  |  | no_helmet | 49 | 18 | 1 | 0.731 | 0.980 | 0.838 |
+|  |  | both (pooled) | 71 | 21 | 4 | 0.772 | 0.947 | 0.850 |
+| Our dev | Start model | helmet | 74 | 104 | 264 | 0.416 | 0.219 | 0.287 |
+|  |  | no_helmet | 61 | 328 | 67 | 0.157 | 0.477 | 0.236 |
+|  |  | both (pooled) | 135 | 432 | 331 | 0.238 | 0.290 | 0.261 |
+|  | Fine-tuned v1 | helmet | 280 | 81 | 58 | 0.776 | 0.828 | 0.801 |
+|  |  | no_helmet | 76 | 38 | 52 | 0.667 | 0.594 | 0.628 |
+|  |  | both (pooled) | 356 | 119 | 110 | 0.749 | 0.764 | 0.757 |
+|  | **v2 (new)** | helmet | 257 | 83 | 81 | 0.756 | 0.760 | 0.758 |
+|  |  | no_helmet | 81 | 54 | 47 | 0.600 | 0.633 | 0.616 |
+|  |  | both (pooled) | 338 | 137 | 128 | 0.712 | 0.725 | 0.718 |
+
 ### Helmets worn on heads (DeBoniz val+test)
 
 584 held-out images with only helmet boxes, where CLIP says the helmet is on a person's head (682 boxes). Share of those boxes each model labels correctly as helmet at confidence 0.25. v2 was not measured on this set.
