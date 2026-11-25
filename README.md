@@ -32,7 +32,7 @@ We took 13 evenly spaced images (every 50th) from the DeBoniz test split (licenc
 | Start model | `helmet-26m` from `leeyunjai/yolo26-helmet`. The one we started from. |
 | Fine-tuned v1 | Start model, all weights fine-tuned for 40 epochs on our rider data. |
 | v1 + caps (full fine-tune) | v1, fine-tuned again with photos of people in caps, hats and headscarves labelled no_helmet. Changes every weight. |
-| v1 + caps (LoRA) | Same extra photos, but only small add-on layers are trained, so the original weights stay put. Also mixes in the old model's own predictions so it does not forget. |
+| v1 + caps (LoRA) | Same extra photos, but only small add-on layers are trained, so the original weights stay put. Also mixes in the old model's own predictions so it does not forget. **Experimental, not recommended as the default:** it over-calls no_helmet on helmeted close-ups (see the examples). A fixed version is being trained. |
 
 ## Benchmarks
 
@@ -129,7 +129,7 @@ Download from the [v1.0 release](https://github.com/GPA-N/helmet-detection-yolo2
 |---|---|
 | `helmet-v1-finetune.pt` | Fine-tuned v1 |
 | `helmet-v1-caps-full.pt` | v1 + caps (full fine-tune) |
-| `helmet-v1-caps-lora.pt` | v1 + caps (LoRA) |
+| `helmet-v1-caps-lora.pt` | v1 + caps (LoRA). **Experimental: misses helmets on close-ups. Prefer the other two for now.** |
 
 **Licence caveat:** these were fine-tuned from `leeyunjai/yolo26-helmet`, which states no licence, and Ultralytics code is AGPL-3.0. The weights are shared as-is, with no warranty, and may be taken down if the start model's author objects. The start model itself is not included: get it from its Hugging Face page.
 
